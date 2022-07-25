@@ -47,6 +47,8 @@ const config: HardhatUserConfig = {
   },
   dependencyCompiler: { // add your dependencies here
     paths: [
+      "@openzeppelin/contracts/access/Ownable.sol",
+      "@openzeppelin/contracts/token/ERC20/IERC20.sol"
     ],
   }
 };
