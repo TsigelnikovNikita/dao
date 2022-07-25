@@ -12,6 +12,8 @@ contract DAO is Ownable {
     uint256 public minimumQuorum;
     uint256 public debatingPeriodDuration;
 
+    mapping(address => uint256) public deposits;
+
     constructor(
         address chairPerson,
         address _voteToken,
@@ -25,5 +27,11 @@ contract DAO is Ownable {
 
         minimumQuorum = _minimumQuorum;
         debatingPeriodDuration = _debatingPeriodDuration;
+    }
+
+    function deposit(uint256 amount) external {
+        voteToken.transferFrom(msg.sender, address(this), amount);
+
+        deposits[msg.sender] += amount;
     }
 }
