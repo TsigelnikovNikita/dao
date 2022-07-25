@@ -18,8 +18,11 @@ contract DAO is Ownable {
         uint256 _minimumQuorum,
         uint256 _debatingPeriodDuration
     ) {
+        require(chairPerson != address(0x0) && _voteToken != address(0x0), "DAO: address can't be a zero");
+
         transferOwnership(chairPerson);
         voteToken = IERC20(_voteToken);
+
         minimumQuorum = _minimumQuorum;
         debatingPeriodDuration = _debatingPeriodDuration;
     }
