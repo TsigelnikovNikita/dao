@@ -8,6 +8,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Timers.sol";
 
+/**
+ * @title Core of the Decentralized Autonomous Organisation system
+ *
+ * @author Nikita Tsigelnikov
+ */
 contract DAO is Ownable {
     using Timers for Timers.BlockNumber;
 
@@ -25,6 +30,9 @@ contract DAO is Ownable {
     mapping(address => uint256) public deposits;
     mapping(uint256 => Proposal) public proposals;
 
+    /**
+     * @dev Emitted from {addProposal} function
+     */
     event ProposalCreated(
         uint256 proposalId,
         address[] recipients,
@@ -35,6 +43,12 @@ contract DAO is Ownable {
         uint256 endTime
     );
 
+    /**
+     * @param chairPerson Admin of the DAO. Only `chairPerson` can create proposals
+     * @param _voteToken tokens for votes
+     * @param _minimumQuorum minimal amount of votes for one proposal
+     * @param _debatingPeriodDuration life time of the proposal
+     */
     constructor(
         address chairPerson,
         address _voteToken,
@@ -50,12 +64,29 @@ contract DAO is Ownable {
         debatingPeriodDuration = _debatingPeriodDuration;
     }
 
+    /**
+     * @notice Allows to add {amount} of tokens to the deposit of DAO. Your vote power is equal to your deposit.
+     * You must to call the approve function for the DAO contract before {deposit} call
+     *
+     * @param amount amount of tokens you want to deposit
+     */
     function deposit(uint256 amount) external {
         voteToken.transferFrom(msg.sender, address(this), amount);
 
         deposits[msg.sender] += amount;
     }
 
+    /**
+     * @notice Allows to add a new Proposal to the DAO. This function can call only {owner}.
+     * Every Proposal must be an unique
+     *
+     * @param recipients addresses array whose functions (or just call) will be called
+     * @param calldatas array of the calldatas for call funciton
+     * @param values array of the amount of ether will be sended
+     * @param description description of proposal
+     *
+     * @dev Emits {ProposalCreated} event
+     */
     function addProposal(
         address[] calldata recipients,
         bytes[] calldata calldatas,
@@ -86,6 +117,11 @@ contract DAO is Ownable {
         );
     }
 
+    /**
+     * @notice Allows to get proposal hash by {recipients}, {calldatas}, {values}, {descriptionHash}.
+     *
+     * @return proposal hash (or proposalID) in uint256
+     */
     function hashProposal(
         address[] calldata recipients,
         bytes[] calldata calldatas,
