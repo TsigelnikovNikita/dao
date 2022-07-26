@@ -54,11 +54,11 @@ describe("DAO.castVote", function () {
       .to.be.revertedWith("DAO: no such proposal");
   });
 
-  it("Must throw an expection if proposal is not an active", async () => {
+  it("Must throw an expection if proposal is debated", async () => {
     await mineBlocks(debatingPeriodDuration);
 
     await expect(dao.connect(user).castVote(proposalId, 100, true))
-      .to.be.revertedWith("DAO: proposal is not an active");
+      .to.be.revertedWith("DAO: proposal is not debated");
   });
 
   it("Must throw an expection if not enough deposit", async () => {

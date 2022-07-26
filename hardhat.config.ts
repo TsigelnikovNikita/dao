@@ -20,7 +20,7 @@ dotenv.config();
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: process.env.COMPILE_VERSION || "0.8.0",
+    version: process.env.COMPILE_VERSION || "0.8.1",
     settings: {
       optimizer: {
         enabled: process.env.OPTIMIZER == "true",
@@ -50,7 +50,8 @@ const config: HardhatUserConfig = {
     paths: [
       "@openzeppelin/contracts/access/Ownable.sol",
       "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-      "@openzeppelin/contracts/utils/Timers.sol"
+      "@openzeppelin/contracts/utils/Timers.sol",
+      "@openzeppelin/contracts/utils/Address.sol"
     ],
   },
   abiExporter: {

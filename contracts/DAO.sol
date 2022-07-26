@@ -7,6 +7,7 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Timers.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 /**
  * @title Core of the Decentralized Autonomous Organisation system
@@ -21,11 +22,10 @@ contract DAO is Ownable {
     uint256 public debatingPeriodDuration;
 
     enum ProposalState {
-        Active,
-        Canceled,
+        Debated,
         Executed,
         Defeated,
-        Expired
+        DebateFinished
     }
 
     struct Proposal {
@@ -44,7 +44,7 @@ contract DAO is Ownable {
      * @dev Emitted from {addProposal} function
      */
     event ProposalCreated(
-        uint256 proposalId,
+        uint256 indexed proposalId,
         address[] recipients,
         bytes[] calldatas,
         uint256[] values,
@@ -52,8 +52,18 @@ contract DAO is Ownable {
         uint256 startTime,
         uint256 endTime
     );
-
-    event castVoted(uint256 proposalId, address voter, uint256 votePower, bool forOrAgainst);
+    /**
+     * @dev Emitted from {addProposal} function
+     */
+    event castVoted(uint256 indexed proposalId, address voter, uint256 votePower, bool forOrAgainst);
+    /**
+     * @dev Emitted from {finishProposal} function
+     */
+    event ProposalExecuted(uint256 indexed proposalId);
+    /**
+     * @dev Emitted from {finishProposal} function
+     */
+    event ProposalDefeated(uint256 indexed proposalId);
 
     /**
      * @param chairPerson Admin of the DAO. Only `chairPerson` can create proposals
@@ -134,7 +144,7 @@ contract DAO is Ownable {
         uint256 votePower,
         bool forOrAgainst
     ) external {
-        require(proposalState(proposalId) == ProposalState.Active, "DAO: proposal is not an active");
+        require(proposalState(proposalId) == ProposalState.Debated, "DAO: proposal is not debated");
         require(votePower <= deposits[msg.sender], "DAO: not enough deposit");
 
         Proposal storage proposal = proposals[proposalId];
@@ -149,6 +159,28 @@ contract DAO is Ownable {
         }
 
         emit castVoted(proposalId, msg.sender, votePower, forOrAgainst);
+    }
+
+    function finishProposal(
+        address[] calldata recipients,
+        bytes[] calldata calldatas,
+        uint256[] calldata values,
+        bytes32 descriptionHash
+    ) external {
+        uint256 proposalId = hashProposal(recipients, calldatas, values, descriptionHash);
+        require(proposalState(proposalId) == ProposalState.DebateFinished, "DAO: proposal debate is not finished");
+
+        Proposal storage proposal = proposals[proposalId];
+        require(minimumQuorum <= proposal.yes + proposal.no, "DAO: not enough quorum");
+
+        if (proposal.yes > proposal.no) {
+            proposal.executed = true;
+            emit ProposalExecuted(proposalId);
+            _execute(recipients, calldatas, values);
+        } else {
+            proposal.defeated = true;
+            emit ProposalDefeated(proposalId);
+        }
     }
 
     /**
@@ -176,14 +208,25 @@ contract DAO is Ownable {
         // proposal must exists
         require(proposal.endTime.isStarted(), "DAO: no such proposal");
 
-        if (block.number >= proposal.endTime.getDeadline()) {
-            return ProposalState.Expired;
+        if (proposal.defeated) {
+            return ProposalState.Defeated;
         } else if (proposal.executed) {
             return ProposalState.Executed;
-        } else if (proposal.defeated) {
-            return ProposalState.Defeated;
+        } else if (block.number >= proposal.endTime.getDeadline()) {
+            return ProposalState.DebateFinished;
         } else {
-            return ProposalState.Active;
+            return ProposalState.Debated;
+        }
+    }
+
+    function _execute(
+        address[] calldata recipients,
+        bytes[] calldata calldatas,
+        uint256[] calldata values
+    ) private {
+        for (uint256 i = 0; i < calldatas.length; ++i) {
+            (bool success, bytes memory returndata) = recipients[i].call{value: values[i]}(calldatas[i]);
+            Address.verifyCallResult(success, returndata, "DAO: error without error message");
         }
     }
 }

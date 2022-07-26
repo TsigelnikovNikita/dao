@@ -24,14 +24,14 @@ describe("DAO.addProposal", function () {
   let chairPerson: SignerWithAddress;
   let user: SignerWithAddress;
   let recipient: string;
-  let proposalId : BigNumber;
+  let proposalId: BigNumber;
 
   async function daoInitializeFixture() {
     const [chairPerson, user, recipient] = await ethers.getSigners();
     const proposalId = hashProposal(
       ["address[]", "bytes[]", "uint256[]", "bytes32"],
       [recipient.address], [calldata], [value], descriptionHash
-      );
+    );
 
     const VoteToken = await ethers.getContractFactory("VoteToken", user);
     const voteToken = await VoteToken.deploy();
@@ -75,7 +75,7 @@ describe("DAO.addProposal", function () {
 
     const proposal = await dao.proposals(proposalId);
 
-    expect(await dao.proposalState(proposalId)).to.eq(ProposalState.Active);
+    expect(await dao.proposalState(proposalId)).to.eq(ProposalState.Debated);
     expect(proposal.endTime._deadline).to.eq((await getBlockNumber()) + debatingPeriodDuration);
     expect(proposal.yes).to.eq(await dao.deposits(chairPerson.address));
     expect(proposal.no).to.eq(0);

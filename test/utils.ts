@@ -3,13 +3,13 @@ import { ethers, network } from "hardhat";
 import { defaultAbiCoder as abiCoder, keccak256 } from "ethers/lib/utils";
 
 export enum ProposalState {
-    Active,
+    Debated,
     Executed,
     Defeated,
-    Expired
+    DebateFinished
 }
 
-export async function mineBlocks(newNumber : number) {
+export async function mineBlocks(newNumber: number) {
     await network.provider.send("hardhat_mine", ["0x" + (newNumber).toString(16)]);
 }
 
@@ -22,12 +22,12 @@ export async function getAddresses(): Promise<Array<string>> {
 
     let result = new Array<string>;
     for (const account of accounts) {
-      result.push(account.address);
+        result.push(account.address);
     }
     return result;
 }
 
-export async function getAddress(index : number): Promise<string> {
+export async function getAddress(index: number): Promise<string> {
     const account = (await ethers.getSigners()).at(index);
     if (account == undefined) {
         return "";
@@ -37,12 +37,11 @@ export async function getAddress(index : number): Promise<string> {
 }
 
 export function hashProposal(
-    types : Array<string>,
-    recipients : Array<string>,
-    calldatas : Array<string>,
-    values : Array<number>,
-    descriptionHash : string)
-{
+    types: Array<string>,
+    recipients: Array<string>,
+    calldatas: Array<string>,
+    values: Array<number>,
+    descriptionHash: string) {
     const encodedData = abiCoder.encode(types, [recipients, calldatas, values, descriptionHash]);
     const encodedDataHash = keccak256(encodedData);
     return BigNumber.from(encodedDataHash);
