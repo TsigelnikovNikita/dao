@@ -19,7 +19,6 @@ describe("DAO.addProposal", function () {
   const description = "Test description";
   const descriptionHash = keccak256(ethers.utils.toUtf8Bytes(description));
 
-  let voteToken: VoteToken;
   let dao: DAO;
   let chairPerson: SignerWithAddress;
   let user: SignerWithAddress;
@@ -46,7 +45,7 @@ describe("DAO.addProposal", function () {
   }
 
   beforeEach(async () => {
-    ({ voteToken, dao, chairPerson, user, recipient, proposalId } = await loadFixture(daoInitializeFixture));
+    ({ dao, chairPerson, user, recipient, proposalId } = await loadFixture(daoInitializeFixture));
   });
 
   it("Must throw an expection if chairPerson is caller", async () => {

@@ -139,6 +139,15 @@ contract DAO is Ownable {
         );
     }
 
+    /**
+     * @notice Allows to cast vote for or against the proposal with `proposalId`
+     *
+     * @param proposalId id of proposal
+     * @param votePower amount of vote
+     * @param forOrAgainst true - for, false - against
+     *
+     * @dev Emits {castVoted} event
+     */
     function castVote(
         uint256 proposalId,
         uint256 votePower,
@@ -161,6 +170,17 @@ contract DAO is Ownable {
         emit castVoted(proposalId, msg.sender, votePower, forOrAgainst);
     }
 
+    /**
+     * @notice Allows to finish proposal if debate period is ended. Will execute proposal if quorum is enough
+     * and 'for' votes is greater than 'against'
+     *
+     * @param recipients see {addProposal} function
+     * @param calldatas  see {addProposal} function
+     * @param values  see {addProposal} function
+     * @param descriptionHash hash of the proposal description
+     *
+     * @dev Emits {ProposalExecuted} event if proposal was executed and {ProposalDefeated} otherwise
+     */
     function finishProposal(
         address[] calldata recipients,
         bytes[] calldata calldatas,

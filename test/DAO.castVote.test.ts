@@ -5,7 +5,7 @@ import { BigNumber } from "ethers";
 import { DAO, VoteToken } from "../typechain-types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { keccak256 } from "ethers/lib/utils";
-import { getBlockNumber, hashProposal, mineBlocks, ProposalState } from "./utils";
+import { hashProposal, mineBlocks } from "./utils";
 
 import abi from "../abi/contracts/forTests/TestContract.sol/TestContract.json";
 
