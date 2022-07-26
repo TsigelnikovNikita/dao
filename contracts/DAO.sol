@@ -20,11 +20,21 @@ contract DAO is Ownable {
     uint256 public minimumQuorum;
     uint256 public debatingPeriodDuration;
 
+    enum ProposalState {
+        Active,
+        Canceled,
+        Executed,
+        Defeated,
+        Expired
+    }
+
     struct Proposal {
         uint256 yes;
         uint256 no;
         bool executed;
+        bool defeated;
         Timers.BlockNumber endTime;
+        mapping(address => bool) voted;
     }
 
     mapping(address => uint256) public deposits;
@@ -42,6 +52,8 @@ contract DAO is Ownable {
         uint256 startTime,
         uint256 endTime
     );
+
+    event castVoted(uint256 proposalId, address voter, uint256 votePower, bool forOrAgainst);
 
     /**
      * @param chairPerson Admin of the DAO. Only `chairPerson` can create proposals
@@ -117,6 +129,26 @@ contract DAO is Ownable {
         );
     }
 
+    function castVote(
+        uint256 proposalId,
+        uint256 votePower,
+        bool forOrAgainst
+    ) external {
+        require(proposalState(proposalId) == ProposalState.Active, "DAO: proposal is not an active");
+        require(deposits[msg.sender] > 0, "DAO: you don't have a deposit");
+
+        Proposal storage proposal = proposals[proposalId];
+        require(!proposal.voted[msg.sender], "DAO: You have already voted");
+
+        if (forOrAgainst == true) {
+            proposal.yes += votePower;
+        } else {
+            proposal.no += votePower;
+        }
+
+        emit castVoted(proposalId, msg.sender, votePower, forOrAgainst);
+    }
+
     /**
      * @notice Allows to get proposal hash by {recipients}, {calldatas}, {values}, {descriptionHash}.
      *
@@ -129,5 +161,27 @@ contract DAO is Ownable {
         bytes32 descriptionHash
     ) public pure returns (uint256) {
         return uint256(keccak256(abi.encode(recipients, calldatas, values, descriptionHash)));
+    }
+
+    /**
+     * @dev Current state of a proposal
+     *
+     * @return state return one of the {ProposalState} enum
+     */
+    function proposalState(uint256 proposalId) public view returns (ProposalState state) {
+        Proposal storage proposal = proposals[proposalId];
+
+        // proposal must exists
+        require(proposal.endTime.isStarted(), "DAO: no such proposal");
+
+        if (block.number >= proposal.endTime.getDeadline()) {
+            return ProposalState.Expired;
+        } else if (proposal.executed) {
+            return ProposalState.Executed;
+        } else if (proposal.defeated) {
+            return ProposalState.Defeated;
+        } else {
+            return ProposalState.Active;
+        }
     }
 }

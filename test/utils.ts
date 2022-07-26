@@ -5,6 +5,7 @@ import { defaultAbiCoder as abiCoder, keccak256 } from "ethers/lib/utils";
 export enum ProposalState {
     Active,
     Executed,
+    Defeated,
     Expired
 }
 
