@@ -23,9 +23,9 @@ contract DAO is Ownable {
     }
 
     mapping(address => uint256) public deposits;
-    mapping(uint256 => Proposal) proposals;
+    mapping(uint256 => Proposal) public proposals;
 
-    event ProposalIsCreated(
+    event ProposalCreated(
         uint256 proposalId,
         address[] recipients,
         bytes[] calldatas,
@@ -62,7 +62,11 @@ contract DAO is Ownable {
         uint256[] calldata values,
         string calldata description
     ) external onlyOwner {
-        uint256 proposalId = hashProposal(recipients, calldatas, values, keccak256(abi.encode(description)));
+        require(recipients.length == values.length, "DAO: invalid proposal length");
+        require(recipients.length == calldatas.length, "DAO: invalid proposal length");
+        require(recipients.length > 0, "DAO: empty proposal");
+
+        uint256 proposalId = hashProposal(recipients, calldatas, values, keccak256(bytes(description)));
 
         Proposal storage proposal = proposals[proposalId];
 
@@ -71,7 +75,7 @@ contract DAO is Ownable {
         proposal.endTime.setDeadline(uint64(block.number + debatingPeriodDuration));
         proposal.yes = deposits[msg.sender];
 
-        emit ProposalIsCreated(
+        emit ProposalCreated(
             proposalId,
             recipients,
             calldatas,

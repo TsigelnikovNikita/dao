@@ -6,6 +6,7 @@ import "@nomicfoundation/hardhat-toolbox";  // https://www.npmjs.com/package/@no
 import "hardhat-dependency-compiler";       // https://www.npmjs.com/package/hardhat-dependency-compiler
 import "hardhat-storage-layout";            // https://www.npmjs.com/package/hardhat-storage-layout
 import "hardhat-contract-sizer";            // https://www.npmjs.com/package/hardhat-contract-sizer
+import "hardhat-abi-exporter";              // https://www.npmjs.com/package/hardhat-abi-exporter
 
 task("accounts", "Prints the list of accounts", async (_, {ethers}) => {
   const accounts = await ethers.getSigners();
@@ -51,6 +52,10 @@ const config: HardhatUserConfig = {
       "@openzeppelin/contracts/token/ERC20/IERC20.sol",
       "@openzeppelin/contracts/utils/Timers.sol"
     ],
+  },
+  abiExporter: {
+    runOnCompile: process.env.ABI_EXPORTER == "true",
+    only: [':TestContract$'],
   }
 };
 
