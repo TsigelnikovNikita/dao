@@ -75,6 +75,7 @@ describe("DAO.addProposal", function () {
 
     const proposal = await dao.proposals(proposalId);
 
+    expect(await dao.proposalState(proposalId)).to.eq(ProposalState.Active);
     expect(proposal.endTime._deadline).to.eq((await getBlockNumber()) + debatingPeriodDuration);
     expect(proposal.yes).to.eq(await dao.deposits(chairPerson.address));
     expect(proposal.no).to.eq(0);

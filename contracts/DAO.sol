@@ -135,10 +135,12 @@ contract DAO is Ownable {
         bool forOrAgainst
     ) external {
         require(proposalState(proposalId) == ProposalState.Active, "DAO: proposal is not an active");
-        require(deposits[msg.sender] > 0, "DAO: you don't have a deposit");
+        require(votePower <= deposits[msg.sender], "DAO: not enough deposit");
 
         Proposal storage proposal = proposals[proposalId];
         require(!proposal.voted[msg.sender], "DAO: You have already voted");
+
+        proposal.voted[msg.sender] = true;
 
         if (forOrAgainst == true) {
             proposal.yes += votePower;
