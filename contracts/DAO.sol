@@ -191,7 +191,7 @@ contract DAO is Ownable {
         require(proposalState(proposalId) == ProposalState.DebateFinished, "DAO: proposal debate is not finished");
 
         Proposal storage proposal = proposals[proposalId];
-        require(minimumQuorum <= proposal.yes + proposal.no, "DAO: not enough quorum");
+        require(minimumQuorum <= proposal.yes + proposal.no, "DAO: minimum quorum has not reached");
 
         if (proposal.yes > proposal.no) {
             proposal.executed = true;
@@ -245,6 +245,7 @@ contract DAO is Ownable {
         uint256[] calldata values
     ) private {
         for (uint256 i = 0; i < calldatas.length; ++i) {
+            require(address(this).balance >= values[i], "DAO: insufficient balance");
             (bool success, bytes memory returndata) = recipients[i].call{value: values[i]}(calldatas[i]);
             Address.verifyCallResult(success, returndata, "DAO: error without error message");
         }

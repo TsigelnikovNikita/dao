@@ -4,11 +4,10 @@ pragma solidity ^0.8.0;
 // TODO: don't forget remove this after ending development!
 import "hardhat/console.sol";
 
-
 contract TestContract {
-    uint public value;
+    uint256 public value;
 
-    function changeValue(uint newValue) public {
+    function changeValue(uint256 newValue) public {
         value = newValue;
     }
 }

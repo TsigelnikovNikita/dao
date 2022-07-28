@@ -2,7 +2,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
-import { DAO, VoteToken } from "../typechain-types";
+import { DAO } from "../typechain-types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { keccak256 } from "ethers/lib/utils";
 import { getBlockNumber, hashProposal, ProposalState } from "./utils";
