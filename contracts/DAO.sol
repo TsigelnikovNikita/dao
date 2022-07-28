@@ -37,7 +37,13 @@ contract DAO is Ownable {
         mapping(address => bool) voted;
     }
 
+    struct CastedVotes {
+        uint256 voteAmount;
+        Timers.BlockNumber endTime;
+    }
+
     mapping(address => uint256) public deposits;
+    mapping(address => CastedVotes) public castedVotes;
     mapping(uint256 => Proposal) public proposals;
 
     /**
@@ -93,9 +99,25 @@ contract DAO is Ownable {
      * @param amount amount of tokens you want to deposit
      */
     function deposit(uint256 amount) external {
-        voteToken.transferFrom(msg.sender, address(this), amount);
+        bool sent = voteToken.transferFrom(msg.sender, address(this), amount);
+        require(sent, "DAO: Token transfer failed");
 
         deposits[msg.sender] += amount;
+    }
+
+    function withdraw(uint256 amount) external {
+        amount = amount == 0 ? deposits[msg.sender] : amount;
+        require(deposits[msg.sender] >= amount, "DAO: insufficient deposit");
+
+        if (castedVotes[msg.sender].voteAmount < amount) {
+            require(block.number >= castedVotes[msg.sender].endTime.getDeadline(), "DAO: your votes are casted");
+            castedVotes[msg.sender].voteAmount = 0;
+        }
+
+        deposits[msg.sender] -= amount;
+
+        bool sent = voteToken.transfer(msg.sender, amount);
+        require(sent, "DAO: Token transfer failed");
     }
 
     /**
@@ -167,6 +189,18 @@ contract DAO is Ownable {
             proposal.no += votePower;
         }
 
+        if (castedVotes[msg.sender].voteAmount == 0) {
+            castedVotes[msg.sender] = CastedVotes(votePower, proposal.endTime);
+        } else {
+            uint256 castedVote = votePower > castedVotes[msg.sender].voteAmount
+                ? votePower
+                : castedVotes[msg.sender].voteAmount;
+            Timers.BlockNumber memory endTime = proposal.endTime.getDeadline() >
+                castedVotes[msg.sender].endTime.getDeadline()
+                ? proposal.endTime
+                : castedVotes[msg.sender].endTime;
+            castedVotes[msg.sender] = CastedVotes(castedVote, endTime);
+        }
         emit castVoted(proposalId, msg.sender, votePower, forOrAgainst);
     }
 
